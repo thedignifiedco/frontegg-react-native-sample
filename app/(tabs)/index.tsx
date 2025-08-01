@@ -254,7 +254,7 @@ export default function HomeScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Dignified Labs</Text>
+        <Text style={styles.title}>My Expo App</Text>
         <Text style={styles.subtitle}>Frontegg React Native Authentication Demo</Text>
       </View>
 
