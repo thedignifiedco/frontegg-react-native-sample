@@ -27,7 +27,7 @@ export default function HomeScreen() {
     const handleDeepLink = (url: string) => {
       
       // Parse the URL to extract authentication data
-      if (url.includes('dignified://callback')) {
+      if (url.includes('myapp://callback')) {
         const urlParams = new URLSearchParams(url.split('?')[1]);
         const code = urlParams.get('code');
         const error = urlParams.get('error');
