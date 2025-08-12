@@ -1,10 +1,10 @@
 # Frontegg + Expo (React Native) Sample
 
-A minimal Expo Router app that demonstrates integrating Frontegg OAuth Authentication Flow with a custom URL scheme and deep links.
+A minimal Expo Router app that demonstrates integrating Frontegg OAuth Authentication Flow (Authorization Code + PKCE) with a custom URL scheme and deep links.
 
 ## Features
 - Login via Frontegg hosted login using deep links
-- Callback handling (`my-scheme://callback`) and token exchange
+- Callback handling (`my-scheme://callback`) and token exchange (PKCE, no client secret)
 - Token storage with `expo-secure-store`
 - Profile page that decodes the ID token and shows user info
 - Logout flow with `my-scheme://logout`
@@ -20,7 +20,6 @@ Set the values via environment variables used by `app.json`:
 ```bash
 export FRONTEGG_BASE_URL=https://YOUR_SUBDOMAIN.frontegg.com
 export FRONTEGG_CLIENT_ID=YOUR_CLIENT_ID
-export FRONTEGG_CLIENT_SECRET=YOUR_CLIENT_SECRET
 export SCHEME=fronteggreactnativedemo
 ```
 
@@ -31,11 +30,16 @@ npx expo run:ios   # first time to build the dev client
 npx expo start -c
 ```
 
-Ensure you whitelist the redirect URIs in Frontegg (Authentication -> Login Method ->  Hosted Login settings):
+Ensure you whitelist the redirect URIs in Frontegg (Authentication → Login Method → Hosted Login):
 - `fronteggreactnativedemo://callback`
 - `fronteggreactnativedemo://logout`
 
 If you change the scheme, update the values above and re-build the iOS dev client.
+
+### Why no SDK?
+- This sample uses standards-based OAuth 2.0/OIDC with PKCE directly (hosted login → code → token), which is sufficient for many apps.
+- No client secret is shipped; the app is a public client. PKCE binds the code to the device.
+- You can add a Frontegg SDK for higher-level features (UI widgets, session helpers) later if desired.
 
 ## Project structure
 - `app/(tabs)/index.tsx`: Home page with explanation and Login button

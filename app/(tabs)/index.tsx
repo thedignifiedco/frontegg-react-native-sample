@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
+import * as Crypto from 'expo-crypto';
+import * as SecureStore from 'expo-secure-store';
 
 const cfg = {
   baseUrl: Constants.expoConfig?.extra?.fronteggBaseUrl || '',
@@ -10,10 +12,32 @@ const cfg = {
 };
 
 export default function TabOneScreen() {
+  const base64UrlEncode = (bytes: Uint8Array): string => {
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    // btoa is available in RN (Hermes). Convert to URL-safe base64
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+  };
+
+  const hexToBytes = (hex: string): Uint8Array => {
+    const clean = hex.length % 2 ? '0' + hex : hex;
+    const out = new Uint8Array(clean.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(clean.substr(i * 2, 2), 16);
+    return out;
+  };
+
   const onLogin = async () => {
     const scope = 'openid profile email';
     const state = Math.random().toString(36).slice(2);
-    const url = `${cfg.baseUrl}/oauth/authorize?client_id=${cfg.clientId}&redirect_uri=${cfg.redirectUri}&response_type=code&scope=${scope.replace(/ /g, '%20')}&state=${state}`;
+
+    // PKCE: generate code_verifier and code_challenge (S256)
+    const verifierBytes = await Crypto.getRandomBytesAsync(32);
+    const codeVerifier = base64UrlEncode(verifierBytes);
+    await SecureStore.setItemAsync('pkce_code_verifier', codeVerifier);
+    const sha256Hex = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, codeVerifier, { encoding: Crypto.CryptoEncoding.HEX });
+    const codeChallenge = base64UrlEncode(hexToBytes(sha256Hex));
+
+    const url = `${cfg.baseUrl}/oauth/authorize?client_id=${cfg.clientId}&redirect_uri=${cfg.redirectUri}&response_type=code&scope=${scope.replace(/ /g, '%20')}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
     await WebBrowser.openBrowserAsync(url);
   };
 

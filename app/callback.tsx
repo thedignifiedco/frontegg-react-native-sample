@@ -7,7 +7,6 @@ import * as SecureStore from 'expo-secure-store';
 const cfg = {
   baseUrl: Constants.expoConfig?.extra?.fronteggBaseUrl || '',
   clientId: Constants.expoConfig?.extra?.fronteggClientId || '',
-  clientSecret: Constants.expoConfig?.extra?.fronteggClientSecret || '',
   redirectUri: Constants.expoConfig?.extra?.fronteggRedirectUri || '',
 };
 
@@ -23,15 +22,16 @@ export default function Callback() {
         return;
       }
       try {
+        const codeVerifier = (await SecureStore.getItemAsync('pkce_code_verifier')) || '';
         const resp = await fetch(`${cfg.baseUrl}/oauth/token`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
             grant_type: 'authorization_code',
             client_id: cfg.clientId,
-            client_secret: cfg.clientSecret,
             code,
             redirect_uri: cfg.redirectUri,
+            code_verifier: codeVerifier,
           }).toString(),
         });
         const data = await resp.json();

@@ -40,7 +40,6 @@
     "extra": {
       "fronteggBaseUrl": "${FRONTEGG_BASE_URL}",
       "fronteggClientId": "${FRONTEGG_CLIENT_ID}",
-      "fronteggClientSecret": "${FRONTEGG_CLIENT_SECRET}",
       "fronteggRedirectUri": "${SCHEME}://callback",
       "fronteggLogoutRedirectUri": "${SCHEME}://logout"
     }
