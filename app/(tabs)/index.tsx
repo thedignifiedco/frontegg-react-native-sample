@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
@@ -12,6 +12,36 @@ const cfg = {
 };
 
 export default function TabOneScreen() {
+  // Simple storage abstraction: SecureStore on native, localStorage on web
+  const storage = {
+    getItem: async (key: string) => {
+      if (Platform.OS === 'web') {
+        try { return localStorage.getItem(key) || null; } catch { return null; }
+      }
+      return await SecureStore.getItemAsync(key);
+    },
+    setItem: async (key: string, value: string) => {
+      if (Platform.OS === 'web') {
+        try { localStorage.setItem(key, value); return; } catch { return; }
+      }
+      return await SecureStore.setItemAsync(key, value);
+    },
+    deleteItem: async (key: string) => {
+      if (Platform.OS === 'web') {
+        try { localStorage.removeItem(key); return; } catch { return; }
+      }
+      return await SecureStore.deleteItemAsync(key);
+    }
+  };
+
+  // Compute platform-appropriate redirect URIs
+  const computedRedirectUri = Platform.OS === 'web'
+    ? `${window.location.origin}/callback`
+    : cfg.redirectUri;
+  const computedLogoutRedirectUri = Platform.OS === 'web'
+    ? `${window.location.origin}/logout`
+    : cfg.logoutRedirectUri;
+
   const base64UrlEncode = (bytes: Uint8Array): string => {
     let binary = '';
     for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
@@ -33,12 +63,16 @@ export default function TabOneScreen() {
     // PKCE: generate code_verifier and code_challenge (S256)
     const verifierBytes = await Crypto.getRandomBytesAsync(32);
     const codeVerifier = base64UrlEncode(verifierBytes);
-    await SecureStore.setItemAsync('pkce_code_verifier', codeVerifier);
+    await storage.setItem('pkce_code_verifier', codeVerifier);
     const sha256Hex = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, codeVerifier, { encoding: Crypto.CryptoEncoding.HEX });
     const codeChallenge = base64UrlEncode(hexToBytes(sha256Hex));
 
-    const url = `${cfg.baseUrl}/oauth/authorize?client_id=${cfg.clientId}&redirect_uri=${cfg.redirectUri}&response_type=code&scope=${scope.replace(/ /g, '%20')}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-    await WebBrowser.openBrowserAsync(url);
+    const url = `${cfg.baseUrl}/oauth/authorize?client_id=${cfg.clientId}&redirect_uri=${computedRedirectUri}&response_type=code&scope=${scope.replace(/ /g, '%20')}&state=${state}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
+    if (Platform.OS === 'web') {
+      window.location.assign(url);
+    } else {
+      await WebBrowser.openBrowserAsync(url);
+    }
   };
 
   return (
@@ -56,8 +90,8 @@ export default function TabOneScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Frontegg setup (iOS)</Text>
         <Text style={styles.bullet}>• Add these redirect URIs in your Frontegg OAuth app:</Text>
-        <Text style={styles.code}>- {cfg.redirectUri}</Text>
-        <Text style={styles.code}>- {cfg.logoutRedirectUri}</Text>
+        <Text style={styles.code}>- {computedRedirectUri}</Text>
+        <Text style={styles.code}>- {computedLogoutRedirectUri}</Text>
         <Text style={styles.bullet}>• Ensure the app scheme is <Text style={styles.codeInline}>fronteggreactnativedemo</Text></Text>
         <Text style={styles.bullet}>• Config values are in <Text style={styles.codeInline}>app.json → expo.extra</Text>:</Text>
         <Text style={styles.code}>- fronteggBaseUrl: {cfg.baseUrl}</Text>

@@ -22,7 +22,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.fronteggreactnativesample"
     },
     "web": {
       "bundler": "metro",
@@ -38,10 +39,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "fronteggBaseUrl": "${FRONTEGG_BASE_URL}",
-      "fronteggClientId": "${FRONTEGG_CLIENT_ID}",
-      "fronteggRedirectUri": "${SCHEME}://callback",
-      "fronteggLogoutRedirectUri": "${SCHEME}://logout"
+      "fronteggBaseUrl": "https://dignifiedlabs-dev.frontegg.com",
+      "fronteggClientId": "9832d283-6401-4a61-bdd7-b6d842032688",
+      "fronteggRedirectUri": "fronteggreactnativedemo://callback",
+      "fronteggLogoutRedirectUri": "fronteggreactnativedemo://logout"
     }
   },
   "name": "FronteggReactNativeDemo",
